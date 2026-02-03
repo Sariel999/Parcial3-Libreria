@@ -1,0 +1,14 @@
+# Carpetas del sistema
+.vscode/
+.qodo/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+
+# Archivos temporales
+.env
