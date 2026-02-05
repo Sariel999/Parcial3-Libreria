@@ -1,198 +1,141 @@
 console.log('JS cargado correctamente');
 
 /* ===============================
-   REFERENCIAS DOM
+   DOM
 ================================ */
-
-const listaLibros = document.getElementById('listaLibros');
-const inputBusqueda = document.getElementById('busqueda');
+const tblBody = document.getElementById('tblBody');
+let dt = null;
 
 /* ===============================
-   DATA (MODELO)
+   DATA
 ================================ */
-
 let libros = [];
 
 /* ===============================
-   MENSAJES DE ERROR / EXITO
+   ALERTAS
 ================================ */
-
-const getMessage = (type, code) => {
-  const messages = {
-    RESERVA: {
-      success: 'Libro reservado correctamente',
-      error: 'El libro no esta disponible'
-    },
-    DEVOLUCION: {
-      success: 'Libro devuelto correctamente'
-    },
-    GENERAL: {
-      error: 'Ocurrio un error inesperado'
-    }
-  };
-
-  return messages[type]?.[code] || 'Mensaje no definido';
+const okMsg = (msg) => {
+  Swal.fire({ icon: 'success', title: 'EXITO', text: msg });
 };
 
-const showError = (message) => {
-  Swal.fire({
-    icon: 'error',
-    title: 'Error',
-    text: message
-  });
-};
-
-const showSuccess = (message) => {
-  Swal.fire({
-    icon: 'success',
-    title: 'EXITO',
-    text: message
-  });
+const errMsg = (msg) => {
+  Swal.fire({ icon: 'error', title: 'Error', text: msg });
 };
 
 /* ===============================
-   CREAR LIBRO (FUNCION DINAMICA)
+   UTIL
 ================================ */
+const genId = () =>
+  libros.length ? Math.max(...libros.map(l => l.id)) + 1 : 1;
 
-const crearLibro = ({ id, titulo, autor, genero, disponible = true }) => ({
-  id,
-  titulo,
-  autor,
-  genero,
-  disponible
+const mkLibro = (obj) => ({
+  id: obj.id,
+  titulo: obj.titulo,
+  autor: obj.autor,
+  genero: obj.genero,
+  disp: Boolean(obj.disp)
 });
 
 /* ===============================
-   CARGAR LIBROS
+   LOAD
 ================================ */
-
 const loadLibros = () => {
   libros = [
-    crearLibro({ id: 1, titulo: '1984', autor: 'George Orwell', genero: 'Ficcion' }),
-    crearLibro({ id: 2, titulo: 'Clean Code', autor: 'Robert Martin', genero: 'Programacion' }),
-    crearLibro({ id: 3, titulo: 'El Principito', autor: 'Antoine de Saint-Exupery', genero: 'Literatura', disponible: false })
+    mkLibro({ id: 1, titulo: '1984', autor: 'George Orwell', genero: 'Ficcion', disp: true }),
+    mkLibro({ id: 2, titulo: 'Clean Code', autor: 'Robert Martin', genero: 'Programacion', disp: true }),
+    mkLibro({ id: 3, titulo: 'El Principito', autor: 'Antoine de Saint-Exupery', genero: 'Literatura', disp: false })
   ];
 };
 
 /* ===============================
-   MOSTRAR LIBROS (VISTA)
+   READ
 ================================ */
-
 const displayLibros = (data) => {
-  listaLibros.innerHTML = '';
-
-  if (!data.length) {
-    listaLibros.innerHTML = `
-      <div class="col-12 text-center">
-        <p class="text-muted">No hay libros disponibles</p>
-      </div>
-    `;
-    return;
+  if (dt) {
+    dt.destroy();
+    dt = null;
   }
 
-  data.forEach(libro => {
-    const col = document.createElement('div');
-    col.className = 'col-md-4 mb-3';
+  tblBody.innerHTML = '';
 
-    col.innerHTML = `
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title">${libro.titulo}</h5>
-          <p class="card-text">
-            <strong>Autor:</strong> ${libro.autor}<br>
-            <strong>Genero:</strong> ${libro.genero}
-          </p>
-
-          <button class="btn btn-success btn-sm me-2"
-            ${!libro.disponible ? 'disabled' : ''}
-            onclick="reservarLibro(${libro.id})">
-            Reservar
-          </button>
-
-          <button class="btn btn-warning btn-sm"
-            onclick="devolverLibro(${libro.id})">
-            Devolver
-          </button>
-        </div>
-      </div>
+  data.forEach(l => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${l.id}</td>
+      <td>${l.titulo}</td>
+      <td>${l.autor}</td>
+      <td>${l.genero}</td>
+      <td>${l.disp ? 'Si' : 'No'}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" data-id="${l.id}">
+          Eliminar
+        </button>
+      </td>
     `;
+    tblBody.appendChild(tr);
+  });
 
-    listaLibros.appendChild(col);
+  dt = new DataTable('#tblLibros', {
+    pageLength: 5,
+    responsive: true
   });
 };
 
 /* ===============================
-   RESERVAR LIBRO
+   CREATE
 ================================ */
-
-const reservarLibro = async (id) => {
-  const libro = libros.find(l => l.id === id);
-
-  if (!libro || !libro.disponible) {
-    showError(getMessage('RESERVA', 'error'));
+const addLibro = (data) => {
+  if (!data.titulo || !data.autor || !data.genero) {
+    errMsg('Campos incompletos');
     return;
   }
 
-  // simulacion asincronica
-  await new Promise(resolve => setTimeout(resolve, 800));
-
-  libro.disponible = false;
-  showSuccess(getMessage('RESERVA', 'success'));
-  displayLibros(libros);
-
-  setTimeout(() => {
-    Swal.fire({
-      icon: 'info',
-      title: 'Recordatorio',
-      text: `Recuerda devolver el libro "${libro.titulo}"`
-    });
-  }, 2000);
-};
-
-/* ===============================
-   DEVOLVER LIBRO
-================================ */
-
-const devolverLibro = async (id) => {
-  const libro = libros.find(l => l.id === id);
-
-  if (!libro) {
-    showError(getMessage('GENERAL', 'error'));
-    return;
-  }
-
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  libro.disponible = true;
-  showSuccess(getMessage('DEVOLUCION', 'success'));
-  displayLibros(libros);
-};
-
-/* ===============================
-   FILTRO / BUSQUEDA
-================================ */
-
-const filterLibros = (text) => {
-  const value = text.toLowerCase();
-
-  const filtered = libros.filter(l =>
-    l.titulo.toLowerCase().includes(value) ||
-    l.autor.toLowerCase().includes(value) ||
-    l.genero.toLowerCase().includes(value)
+  libros.push(
+    mkLibro({
+      id: genId(),
+      titulo: data.titulo,
+      autor: data.autor,
+      genero: data.genero,
+      disp: true
+    })
   );
 
-  displayLibros(filtered);
+  okMsg('Libro agregado');
+  displayLibros(libros);
 };
+
+/* ===============================
+   DELETE
+================================ */
+const delLibro = (id) => {
+  libros = libros.filter(l => l.id !== Number(id));
+  okMsg(`Libro eliminado ${id}`);
+  displayLibros(libros);
+};
+
+/* ===============================
+   EVENTS
+================================ */
+tblBody.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.btn-danger');
+  if (!btn) return;
+
+  const id = btn.dataset.id;
+
+  const res = await Swal.fire({
+    icon: 'warning',
+    title: `Eliminar libro ${id}?`,
+    showCancelButton: true,
+    confirmButtonText: 'Eliminar'
+  });
+
+  if (res.isConfirmed) delLibro(id);
+});
 
 /* ===============================
    DOM READY
 ================================ */
-
 document.addEventListener('DOMContentLoaded', () => {
   loadLibros();
   displayLibros(libros);
-
-  inputBusqueda.addEventListener('input', (e) => {
-    filterLibros(e.target.value);
-  });
 });

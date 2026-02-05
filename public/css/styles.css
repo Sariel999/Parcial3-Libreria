@@ -1,0 +1,65 @@
+:root{
+  --b: #0d6efd;
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --tx: #111827;
+  --mut: #6b7280;
+  --bd: #e5e7eb;
+}
+
+body{
+  background: var(--bg);
+  color: var(--tx);
+}
+
+.topbar{
+  background: var(--b);
+  color: #fff;
+}
+
+.card-soft{
+  background: var(--card);
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.06);
+}
+
+.btn-min{
+  padding: .35rem .6rem;
+}
+
+.badge-disp{
+  font-size: .85rem;
+}
+
+.grid-libros{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.libro{
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  background: #fff;
+  padding: 14px;
+}
+
+.libro h5{
+  font-size: 1.05rem;
+  margin: 0 0 6px 0;
+}
+
+.mut{
+  color: var(--mut);
+  font-size: .92rem;
+}
+
+hr.soft{
+  border-top: 1px solid var(--bd);
+  opacity: 1;
+}
+
+.table thead th{
+  background: #f3f4f6;
+}
