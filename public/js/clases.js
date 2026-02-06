@@ -7,12 +7,12 @@ class Usuario {
 }
 
 class Libro {
-  constructor(id, tit, aut, gen) {
+  constructor(id, tit, aut, gen,disp) {
     this.id = id;
     this.tit = tit;
     this.aut = aut;
     this.gen = gen;
-    this.disp = true;
+    this.disp = disp;
   }
 }
 
