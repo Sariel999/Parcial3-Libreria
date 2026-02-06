@@ -14,19 +14,28 @@ const q = document.getElementById('q');
 
 const pintarLib = (arr) => {
   lstLib.innerHTML = '';
+
   arr.forEach(l => {
+    const reservado = !l.disp;
+
     lstLib.innerHTML += `
       <div class="libro">
         <h5>${l.tit}</h5>
         <div class="mut">${l.aut} | ${l.gen}</div>
-        <button class="btn btn-primary btn-sm mt-2"
-          ${l.disp ? '' : 'disabled'} data-id="${l.id}">
-          Reservar
+
+        <button class="btn btn-sm mt-2 
+          ${reservado ? 'btn-secondary' : 'btn-primary'}"
+          ${reservado ? 'disabled' : ''}
+          data-id="${l.id}">
+          
+          ${reservado ? 'Reservado' : 'Reservar'}
+
         </button>
       </div>
     `;
   });
 };
+
 
 const pintarMis = () => {
   tblMis.innerHTML = '';
