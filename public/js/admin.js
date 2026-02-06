@@ -1,4 +1,4 @@
-import { libros, prestamos, usuarios, genId } from './data.js';
+import { libros, prestamos, usuarios, genId, GENEROS } from './data.js';
 import { Libro, Sesion } from './clases.js';
 
 const ses = Sesion.obtener();
@@ -6,7 +6,14 @@ if (!ses || ses.rol !== 'admin') {
   window.location.replace('login.html');
 }
 
+export const opcionesGenero = GENEROS
+  .map(g => `<option value="${g}">${g}</option>`)
+  .join('');
+
+
 document.getElementById('lblAdm').textContent = ses.nom;
+
+
 
 const tblLib = document.getElementById('tblLib');
 const tblPre = document.getElementById('tblPre');
@@ -74,14 +81,27 @@ document.getElementById('btnNuevo').addEventListener('click', async () => {
     html: `
       <input id="tit" class="swal2-input" placeholder="Titulo">
       <input id="aut" class="swal2-input" placeholder="Autor">
-      <input id="gen" class="swal2-input" placeholder="Genero">
+      <select id="gen" class="swal2-input swal2-select placeholder">
+      <option value="" selected disabled>Seleccionar género</option>
+      ${opcionesGenero}
+      </select>
     `,
     showCancelButton: true,
     confirmButtonText: 'Guardar',
+    didOpen: () => {
+      const sel = document.getElementById('gen');
+
+      sel.addEventListener('change', () => {
+        if (sel.value) {
+          sel.classList.remove('placeholder');
+        }
+      });
+    },
+
     preConfirm: () => {
       const tit = document.getElementById('tit').value.trim();
       const aut = document.getElementById('aut').value.trim();
-      const gen = document.getElementById('gen').value.trim();
+      const gen = document.getElementById('gen').value;
 
       if (!tit || !aut || !gen) {
         Swal.showValidationMessage('Todos los campos son obligatorios');
@@ -109,26 +129,47 @@ document.getElementById('btnNuevo').addEventListener('click', async () => {
 });
 
 
+
 tblLib.addEventListener('dblclick', (e) => {
   const cel = e.target;
-
   if (!cel.classList.contains('ed')) return;
 
   const tr = cel.closest('tr');
   const id = Number(tr.children[0].textContent);
   const campo = cel.dataset.f;
-  const oldVal = cel.textContent;
+  const oldVal = cel.textContent.trim();
 
-  const inp = document.createElement('input');
-  inp.className = 'form-control form-control-sm';
-  inp.value = oldVal;
+  let control;
+
+  if (campo === 'gen') {
+    control = document.createElement('select');
+    control.className = 'form-select form-select-sm';
+
+    control.innerHTML = `
+      <option value="" disabled>Seleccionar género</option>
+      ${opcionesGenero}
+    `;
+
+    control.value = oldVal;
+
+    if (!control.value) {
+      [...control.options].forEach(o => {
+        if (o.value === oldVal) o.selected = true;
+      });
+    }
+
+  } else {
+    control = document.createElement('input');
+    control.className = 'form-control form-control-sm';
+    control.value = oldVal;
+  }
 
   cel.textContent = '';
-  cel.appendChild(inp);
-  inp.focus();
+  cel.appendChild(control);
+  control.focus();
 
   const guardar = () => {
-    const nuevo = inp.value.trim();
+    const nuevo = control.value.trim();
     if (!nuevo || nuevo === oldVal) {
       cel.textContent = oldVal;
       return;
@@ -144,12 +185,20 @@ tblLib.addEventListener('dblclick', (e) => {
     cel.textContent = nuevo;
   };
 
-  inp.addEventListener('blur', guardar);
-  inp.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Enter') inp.blur();
-    if (ev.key === 'Escape') cel.textContent = oldVal;
-  });
+  if (campo === 'gen') {
+    control.addEventListener('change', guardar);
+    control.addEventListener('blur', guardar);
+  } else {
+    control.addEventListener('blur', guardar);
+    control.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') control.blur();
+      if (ev.key === 'Escape') cel.textContent = oldVal;
+    });
+  }
 });
+
+
+
 
 
 tblLib.addEventListener('click', (e) => {
@@ -174,7 +223,7 @@ tblLib.addEventListener('click', (e) => {
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'The book is currently reserved'
+        text: 'El libro se encuentra reservado'
       });
       return;
     }
@@ -185,8 +234,8 @@ tblLib.addEventListener('click', (e) => {
     libros.splice(index, 1);
 
     Swal.fire({
-      title: 'Deleted!',
-      text: 'The book has been deleted.',
+      title: 'Eliminado',
+      text: 'El libro fue eliminado correctamente.',
       icon: 'success'
     });
 
